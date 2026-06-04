@@ -21,17 +21,6 @@ def init_db():
     )
     """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS performance (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ticker TEXT,
-        scan_date TEXT,
-        price_3d REAL,
-        price_5d REAL,
-        price_10d REAL
-    )
-    """)
-
     conn.commit()
     conn.close()
 
@@ -49,18 +38,12 @@ def save_scan(date, ticker, score, price):
     conn.close()
 
 
-def load_data():
-    init_db()
-
+def load_scans():
     conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
 
-    scans = conn.execute("SELECT * FROM scan_results").fetchall()
-
-    try:
-        perf = conn.execute("SELECT * FROM performance").fetchall()
-    except:
-        perf = []
+    cursor.execute("SELECT date, ticker, score, price FROM scan_results")
+    rows = cursor.fetchall()
 
     conn.close()
-
-    return scans, perf
+    return rows

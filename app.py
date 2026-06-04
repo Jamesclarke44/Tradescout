@@ -6,6 +6,12 @@ import sqlite3
 import os
 import pandas as pd
 
+st.title("📊 TradeScout Dashboard")
+
+if st.button("🚀 Run Scanner Now"):
+    run()
+    st.success("Scan complete!")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "stocks.db")
 

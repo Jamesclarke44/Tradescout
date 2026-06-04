@@ -12,7 +12,6 @@ def create_tables():
     conn = connect()
     cursor = conn.cursor()
 
-    # Store daily scan results
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS scan_results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,7 +22,6 @@ def create_tables():
     )
     """)
 
-    # Store future performance tracking
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS performance (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

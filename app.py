@@ -1,4 +1,7 @@
 import streamlit as st
+from datetime import datetime
+
+from main import run   # your scanner function
 import sqlite3
 import os
 import pandas as pd

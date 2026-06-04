@@ -1,26 +1,25 @@
 import sqlite3
+import pandas as pd
 import os
 
-DB_PATH = os.path.join("data", "stocks.db")
+# -----------------------------
+# SAFE PATH HANDLING
+# -----------------------------
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "data", "stocks.db")
 
 
 # -----------------------------
-# CONNECTION
+# INIT DATABASE (SAFE STARTUP)
 # -----------------------------
 
-def connect():
-    return sqlite3.connect(DB_PATH)
+def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-
-# -----------------------------
-# TABLE CREATION
-# -----------------------------
-
-def create_tables():
-    conn = connect()
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Stores daily scan results (your scores)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS scan_results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +30,6 @@ def create_tables():
     )
     """)
 
-    # Stores future performance after signals
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS performance (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,34 +46,21 @@ def create_tables():
 
 
 # -----------------------------
-# SAVE SCAN RESULTS
+# LOAD DATA FOR STREAMLIT
 # -----------------------------
 
-def save_scan_result(date, ticker, score, price):
-    conn = connect()
-    cursor = conn.cursor()
+def load_data():
+    init_db()  # ensures DB always exists before reading
 
-    cursor.execute("""
-    INSERT INTO scan_results (date, ticker, score, price)
-    VALUES (?, ?, ?, ?)
-    """, (date, ticker, score, price))
+    conn = sqlite3.connect(DB_PATH)
 
-    conn.commit()
+    scans = pd.read_sql_query("SELECT * FROM scan_results", conn)
+
+    try:
+        perf = pd.read_sql_query("SELECT * FROM performance", conn)
+    except:
+        perf = pd.DataFrame()
+
     conn.close()
 
-
-# -----------------------------
-# SAVE PERFORMANCE RESULTS
-# -----------------------------
-
-def update_performance(ticker, scan_date, price_3d, price_5d, price_10d):
-    conn = connect()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    INSERT INTO performance (ticker, scan_date, price_3d, price_5d, price_10d)
-    VALUES (?, ?, ?, ?, ?)
-    """, (ticker, scan_date, price_3d, price_5d, price_10d))
-
-    conn.commit()
-    conn.close()
+    return scans, perf

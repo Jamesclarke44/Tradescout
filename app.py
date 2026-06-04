@@ -1,6 +1,7 @@
 import streamlit as st
 import sqlite3
 import os
+import pandas as pd
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "stocks.db")
@@ -9,19 +10,20 @@ DB_PATH = os.path.join(BASE_DIR, "data", "stocks.db")
 def load_data():
     conn = sqlite3.connect(DB_PATH)
 
-    try:
-        scans = conn.execute("SELECT * FROM scan_results").fetchall()
-    except:
-        scans = []
+    df = pd.read_sql_query("SELECT * FROM scan_results", conn)
 
     conn.close()
-    return scans
+    return df
 
 
 st.title("📊 TradeScout Dashboard")
 
-data = load_data()
+df = load_data()
 
-st.write("Scan Results")
+if df.empty:
+    st.warning("No scan data yet. Run main.py first.")
+else:
+    df = df.sort_values("score", ascending=False)
 
-st.write(data)
+    st.subheader("Scan Results")
+    st.dataframe(df, use_container_width=True)

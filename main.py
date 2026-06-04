@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from datetime import datetime
-
+from scanners.consolidation import detect_consolidation
 from data.database import create_tables, save_scan_result
 
 # -----------------------------

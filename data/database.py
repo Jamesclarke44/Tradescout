@@ -1,18 +1,9 @@
 import sqlite3
-import pandas as pd
 import os
 
-# -----------------------------
-# SAFE PATH HANDLING
-# -----------------------------
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "data", "stocks.db")
+DB_PATH = os.path.join(BASE_DIR, "stocks.db")
 
-
-# -----------------------------
-# INIT DATABASE (SAFE STARTUP)
-# -----------------------------
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -45,21 +36,30 @@ def init_db():
     conn.close()
 
 
-# -----------------------------
-# LOAD DATA FOR STREAMLIT
-# -----------------------------
+def save_scan(date, ticker, score, price):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO scan_results (date, ticker, score, price)
+    VALUES (?, ?, ?, ?)
+    """, (date, ticker, score, price))
+
+    conn.commit()
+    conn.close()
+
 
 def load_data():
-    init_db()  # ensures DB always exists before reading
+    init_db()
 
     conn = sqlite3.connect(DB_PATH)
 
-    scans = pd.read_sql_query("SELECT * FROM scan_results", conn)
+    scans = conn.execute("SELECT * FROM scan_results").fetchall()
 
     try:
-        perf = pd.read_sql_query("SELECT * FROM performance", conn)
+        perf = conn.execute("SELECT * FROM performance").fetchall()
     except:
-        perf = pd.DataFrame()
+        perf = []
 
     conn.close()
 

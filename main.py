@@ -2,7 +2,9 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from datetime import datetime
+
 from data.database import create_tables, save_scan_result
+
 # -----------------------------
 # CONFIG
 # -----------------------------
@@ -42,7 +44,7 @@ def add_indicators(df):
 
 
 # -----------------------------
-# SCORING SYSTEM (VERSION 1)
+# SCORING SYSTEM
 # -----------------------------
 
 def score_stock(df):
@@ -67,15 +69,16 @@ def score_stock(df):
     if latest["RelVolume"] > 1.5:
         score += 20
 
-    # Basic breakout proxy (near highs)
-    if latest["Close"] >= df["Close"].rolling(52).max().iloc[-1] * 0.97:
+    # Breakout proximity (52-week high proxy)
+    high_52w = df["Close"].rolling(52).max().iloc[-1]
+    if latest["Close"] >= high_52w * 0.97:
         score += 10
 
     return score
 
 
 # -----------------------------
-# DATA LOADER
+# DATA
 # -----------------------------
 
 def get_data(ticker):
@@ -85,10 +88,13 @@ def get_data(ticker):
 
 
 # -----------------------------
-# MAIN SCANNER
+# SCANNER
 # -----------------------------
 
 def run_scanner():
+    create_tables()
+    today = datetime.now().strftime("%Y-%m-%d")
+
     results = []
 
     for ticker in TICKERS:
@@ -100,11 +106,14 @@ def run_scanner():
                 continue
 
             score = score_stock(df)
+            price = float(df["Close"].iloc[-1])
+
+            save_scan_result(today, ticker, score, price)
 
             results.append({
                 "Ticker": ticker,
                 "Score": score,
-                "Price": round(df["Close"].iloc[-1], 2)
+                "Price": price
             })
 
         except Exception as e:
